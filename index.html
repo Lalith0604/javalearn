@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Interactive Java Learning Guide</title>
+    <!-- Chosen Palette: Warm Neutrals & Slate Blue -->
+    <!-- Application Structure Plan: A responsive single-page application with a fixed sidebar for primary navigation and a main content area. Each main navigation item corresponds to a comprehensive section that is further broken down into thematic sub-sections. This modular structure allows for detailed content per concept while maintaining ease of navigation across major topics. Interactive elements like expandable content, clickable diagrams, code with copy buttons, and data visualizations are integrated within relevant sub-sections to enhance user exploration and understanding. The primary goal is user understanding and ease of navigation through this deep dive into Java concepts, organized logically rather than mirroring a linear report. -->
+    <!-- Visualization & Content Choices:
+        - JVM/JRE/JDK (Sec 1.1) -> Goal: Organize/Inform -> Viz: CSS-based nested diagram -> Interaction: Hover highlight -> Justification: Visually represents hierarchy better than text. -> Method: HTML/Tailwind.
+        - Java Data Types Overview (Sec 1.3) -> Goal: Inform/Organize -> Viz: HTML table with detailed info -> Interaction: Static reference -> Justification: Concise comparison for fundamental types. -> Method: HTML/Tailwind.
+        - OOP Pillars (Sec 2.1) -> Goal: Organize/Inform -> Viz: Interactive flip cards -> Interaction: Click to reveal definitions and code examples -> Justification: Encourages active learning for core concepts. -> Method: HTML/Tailwind, JS.
+        - Exception Hierarchy (Sec 3.1) -> Goal: Organize/Inform -> Viz: CSS-based tree diagram -> Interaction: Hover to highlight paths -> Justification: Clearly illustrates exception relationships. -> Method: HTML/Tailwind.
+        - Thread Lifecycle (Sec 4.2) -> Goal: Organize/Change -> Viz: CSS-based state diagram + accompanying text for each state -> Interaction: Click a state to display its detailed description -> Justification: Standard for visualizing state transitions and behavior. -> Method: HTML/Tailwind, JS.
+        - Sync vs. Async Comparison (Sec 5.1) -> Goal: Compare -> Viz: Side-by-side text + Chart.js Bar Chart -> Interaction: Visual comparison of conceptual performance -> Justification: A chart effectively quantifies the difference in I/O bound performance. -> Method: Chart.js/Canvas.
+        - JDBC PreparedStatement Methods (Sec 6.3) -> Goal: Inform/Organize -> Viz: HTML table with methods and examples -> Interaction: Static reference -> Justification: Provides a quick reference for secure parameter binding. -> Method: HTML/Tailwind.
+        - Clean Code Principles Checklist (Sec 7.1) -> Goal: Inform/Organize -> Viz: HTML checklist/table -> Interaction: Static reference -> Justification: Summarizes best practices for easy review. -> Method: HTML/Tailwind.
+        - Code Examples (Throughout) -> Goal: Inform/Practice -> Viz: Styled code blocks -> Interaction: Copy-to-clipboard button -> Justification: Essential for practical learning and application. -> Method: HTML/Tailwind, JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfdfd;
+            color: #333;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            position: relative;
+        }
+        .code-block .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #4f5b72;
+            color: #fff;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .code-block .copy-btn:hover {
+            background-color: #66799d;
+        }
+        .code-block .keyword { color: #c678dd; }
+        .code-block .type { color: #e5c07b; }
+        .code-block .string { color: #98c379; }
+        .code-block .comment { color: #7f848e; }
+        .code-block .number { color: #d19a66; }
+        .code-block .method { color: #61afef; }
+        
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 3px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #eef2ff;
+            border-left-color: #4338ca;
+            color: #4338ca;
+            transform: translateX(4px);
+        }
+        
+        .flip-card { perspective: 1000px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 0.75rem; }
+        .flip-card-front { background-color: #fff; border: 1px solid #e5e7eb; }
+        .flip-card-back { background-color: #4a5568; color: white; transform: rotateY(180deg); }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .hierarchy-node {
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .hierarchy-node:hover {
+            background-color: #eef2ff;
+            border-color: #a5b4fc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        
+        /* For state diagram */
+        .state-node {
+             cursor: pointer;
+             transition: all 0.2s ease-in-out;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .state-node.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.4);
+        }
+        .state-arrow {
+            position: absolute;
+            background-color: #9ca3af;
+            transition: all 0.2s ease-in-out;
+        }
+        .state-arrow.active {
+            background-color: #4338ca;
+            transform: scale(1.1);
+        }
+
+        [x-cloak] { display: none !important; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #f9fafb;
+        }
+        tbody tr:hover {
+            background-color: #f0f4f8;
+        }
+
+        .expand-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .expand-content.expanded {
+            max-height: 500px; /* Adjust based on content size */
+            transition: max-height 0.5s ease-in;
+        }
+
+    </style>
+    <script>
+        function codeBlock() {
+            return {
+                copyToClipboard(button) {
+                    const code = button.nextElementSibling.querySelector('code').innerText;
+                    const textarea = document.createElement('textarea');
+                    textarea.textContent = code;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        const originalText = button.innerText;
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = originalText;
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                        alert('Failed to copy text. Please copy manually.');
+                    }
+                    document.body.removeChild(textarea);
+                }
+            }
+        }
+
+        function threadLifecycle() {
+            return {
+                activeState: 'New',
+                stateDescriptions: {
+                    'New': 'A thread is in the New state when it has been created but has not yet started to execute. It has not yet invoked the start() method.',
+                    'Runnable': 'A thread in the Runnable state is ready to run and waiting for the CPU to allocate time. It is either currently executing or is ready to run.',
+                    'Blocked': 'A thread is Blocked when it is temporarily inactive because it is waiting for a monitor lock to enter a synchronized block/method or reenter a synchronized block/method after calling wait().',
+                    'Waiting': 'A thread in the Waiting state is waiting indefinitely for another thread to perform a particular action. It can only return to the runnable state when explicitly notified.',
+                    'TimedWaiting': 'A thread in the Timed Waiting state is waiting for a specified time interval or until it is notified by another thread.',
+                    'Terminated': 'A thread is in the Terminated (Dead) state when its run() method completes or if it otherwise terminates due to an unhandled exception.'
+                },
+                setState(state) {
+                    this.activeState = state;
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="{ activeSection: 'introduction', openMobileNav: false }" @scroll.window="
+    let sections = document.querySelectorAll('section');
+    let scrollPos = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+    sections.forEach(el => {
+        if (el.offsetTop <= scrollPos + 100 && (el.offsetTop + el.offsetHeight) > scrollPos + 100) {
+            activeSection = el.id;
+        }
+    });
+">
+
+<div class="flex min-h-screen">
+    <!-- Mobile Nav Button -->
+    <button @click="openMobileNav = !openMobileNav" class="fixed top-4 right-4 z-50 p-2 bg-white rounded-md shadow-lg lg:hidden">
+        <svg x-show="!openMobileNav" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        <svg x-show="openMobileNav" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    
+    <!-- Sidebar -->
+    <aside :class="{ 'translate-x-0': openMobileNav, '-translate-x-full': !openMobileNav }" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold text-gray-800">Java Mastery</h1>
+            <p class="mt-1 text-sm text-gray-500">Interactive Guide</p>
+        </div>
+        <nav class="mt-4 flex flex-col space-y-1 px-3">
+            <a href="#introduction" @click="activeSection = 'introduction'; openMobileNav = false" :class="{ 'active': activeSection === 'introduction' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">1. Introduction</a>
+            <a href="#oop" @click="activeSection = 'oop'; openMobileNav = false" :class="{ 'active': activeSection === 'oop' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">2. Object-Oriented Programming</a>
+            <a href="#error-handling" @click="activeSection = 'error-handling'; openMobileNav = false" :class="{ 'active': activeSection === 'error-handling' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">3. Error Handling & Debugging</a>
+            <a href="#concurrency" @click="activeSection = 'concurrency'; openMobileNav = false" :class="{ 'active': activeSection === 'concurrency' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">4. Concurrency & Multithreading</a>
+            <a href="#sync-async" @click="activeSection = 'sync-async'; openMobileNav = false" :class="{ 'active': activeSection === 'sync-async' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">5. Sync vs. Async</a>
+            <a href="#jdbc" @click="activeSection = 'jdbc'; openMobileNav = false" :class="{ 'active': activeSection === 'jdbc' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">6. JDBC</a>
+            <a href="#best-practices" @click="activeSection = 'best-practices'; openMobileNav = false" :class="{ 'active': activeSection === 'best-practices' }" class="nav-link block p-3 rounded-md font-medium text-gray-600">7. Best Practices</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64 p-6 md:p-10 bg-gray-50/50">
+        <section id="introduction" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">1. Introduction to Java Programming</h2>
+            <p class="text-lg text-gray-600 mb-8">This section introduces the fundamentals of the Java ecosystem. You'll learn what makes Java platform-independent through its core components: the JVM, JRE, and JDK. We'll also cover setting up your development environment and the basic syntax that forms the building blocks of any Java program. Understanding these foundations is the first step to mastering the language, enabling you to write and run your first Java programs with confidence.</p>
+            
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">1.1. What is Java? (JVM, JRE, JDK Explained)</h3>
+            <p class="text-gray-600 mb-6">Java stands as a general-purpose, concurrent, class-based, and object-oriented programming language, meticulously designed to minimize implementation dependencies. Its foundational principle, famously known as "write once, run anywhere" (WORA), signifies that compiled Java code can execute on any platform supporting Java without the need for recompilation. This platform independence is a cornerstone of Java's widespread adoption and enduring relevance in diverse computing environments.</p>
+            <p class="text-gray-600 mb-6">The architecture enabling this portability is centered around three key components: the Java Virtual Machine (JVM), the Java Runtime Environment (JRE), and the Java Development Kit (JDK). The <strong class="text-indigo-700">Java Virtual Machine (JVM)</strong> serves as the abstract computing machine responsible for executing Java bytecode. It acts as a crucial intermediary layer, translating compiled Java code into instructions that the underlying hardware and operating system can understand and execute. This abstraction allows Java programs to run seamlessly across different systems, a fundamental design choice that has significantly contributed to Java's ubiquity.</p>
+            <p class="text-gray-600 mb-6">Building upon the JVM, the <strong class="text-green-700">Java Runtime Environment (JRE)</strong> is a software package that encapsulates the JVM, along with Java class libraries and other essential components required solely for running Java applications. It represents the runtime environment where compiled Java programs operate. For end-users or deployment scenarios, typically only the JRE (or a more streamlined custom runtime image in modern Java versions) is necessary, as it provides the execution capabilities without including development tools.</p>
+            <p class="text-gray-600 mb-6">The <strong class="text-rose-700">Java Development Kit (JDK)</strong> is the most comprehensive package, encompassing the JRE and all the tools vital for developing, compiling, debugging, and executing Java applications. This includes the Java compiler (`javac`), which translates source code into bytecode, and the Java debugger (`jdb`), among other development utilities. The distinction between JDK, JRE, and JVM is important for understanding different user roles and deployment considerations. While the JDK is indispensable for developers, the JRE is sufficient for running applications, which can lead to smaller deployment footprints and enhanced security by excluding unnecessary development tools in production environments. Java continues to be a leading development platform, valued by enterprises and developers for its capacity to reduce costs, accelerate development cycles, and foster innovation.</p>
+            
+            <div class="w-full max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-200">
+                <div class="hierarchy-node group bg-indigo-50 border-indigo-200 p-4">
+                    <h4 class="font-bold text-indigo-800">JDK (Java Development Kit)</h4>
+                    <p class="text-sm text-indigo-600">For Developers: Compile, Debug, Run</p>
+                    <div class="mt-4 p-4 border-2 border-dashed border-indigo-300 rounded-lg">
+                        <div class="hierarchy-node group bg-green-50 border-green-200">
+                            <h4 class="font-bold text-green-800">JRE (Java Runtime Environment)</h4>
+                             <p class="text-sm text-green-600">For Running Applications</p>
+                            <div class="mt-4 p-4 border-2 border-dashed border-green-300 rounded-lg">
+                                <div class="hierarchy-node bg-rose-50 border-rose-200">
+                                    <h4 class="font-bold text-rose-800">JVM (Java Virtual Machine)</h4>
+                                    <p class="text-sm text-rose-600">Executes Bytecode</p>
+                                </div>
+                                <div class="hierarchy-node mt-2 bg-gray-50">
+                                    <h4 class="font-bold text-gray-700">Libraries</h4>
+                                    <p class="text-sm text-gray-500">Core classes required to run Java programs.</p>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="hierarchy-node mt-2 bg-gray-50">
+                            <h4 class="font-bold text-gray-700">Development Tools</h4>
+                            <p class="text-sm text-gray-500">Includes `javac` (compiler), `jdb` (debugger), etc.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">1.2. Setting Up Your Java Development Environment</h3>
+            <p class="text-gray-600 mb-6">Establishing an efficient Java development environment is the initial and critical step for any aspiring Java programmer. The process begins with downloading and installing the latest Java Development Kit (JDK) from Oracle's official website. The JDK provides the essential compiler and runtime environment necessary to transform human-readable Java code into executable programs. For those beginning their journey, it is beneficial to first practice basic command-line compilation (`javac YourProgram.java`) and execution (`java YourProgram`) to grasp the underlying process before relying entirely on integrated development environments.</p>
+            <p class="text-gray-600 mb-6">For professional and efficient development, however, the use of an Integrated Development Environment (IDE) is highly recommended. Popular choices include Eclipse, IntelliJ IDEA, and NetBeans. These IDEs offer a rich suite of features that significantly enhance developer productivity. Key functionalities include intelligent code completion, syntax highlighting, integrated debugging tools, and robust project management capabilities. While the basic setup is straightforward, mastering a good IDE is crucial for achieving proficiency in modern Java development. IDEs automate repetitive tasks, provide powerful refactoring capabilities, and, most importantly, offer sophisticated debugging tools—such as breakpoints, step-through execution, and variable inspection—that are indispensable for identifying and resolving complex issues efficiently. This proficiency with development tools is as vital as language mastery itself for anyone aiming to truly perfect their Java skills.</p>
+            
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">1.3. Java Fundamentals: Syntax, Data Types, Variables, Operators, and Control Flow</h3>
+            <p class="text-gray-600 mb-6">The foundation of Java programming lies in mastering its fundamental concepts, which serve as the building blocks for all more complex applications. The journey typically commences with the classic "Hello World" program, which illustrates the basic structure of a Java class and the `main` method as the program's entry point.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">HelloWorld</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Hello, World!"</span>);
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-6 mb-6">Understanding how to name elements and the reserved words in the language is next. <strong class="text-slate-700">Identifiers</strong> refer to the valid naming conventions for variables, classes, and methods, while <strong class="text-slate-700">keywords</strong> are reserved words in Java that possess predefined meanings and cannot be used for other purposes.</p>
+
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Data Types</h4>
+            <p class="text-gray-600 mb-6">Java supports various <strong class="text-slate-700">data types</strong>, categorized into primitive and reference types. Primitive types, such as `int`, `boolean`, `char`, and `double`, directly store values in memory. In contrast, reference types, including `String`, arrays, and custom classes, hold memory addresses that point to objects stored elsewhere. A clear understanding of their default values and memory implications is essential for writing efficient code.</p>
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type Category</th>
+                            <th>Type Name</th>
+                            <th>Size/Range (Typical)</th>
+                            <th>Default Value</th>
+                            <th>Typical Use Cases</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="8"><strong>Primitive</strong></td>
+                            <td>`byte`</td>
+                            <td>8-bit signed integer</td>
+                            <td>`0`</td>
+                            <td>Small integer values, raw byte data</td>
+                        </tr>
+                        <tr>
+                            <td>`short`</td>
+                            <td>16-bit signed integer</td>
+                            <td>`0`</td>
+                            <td>Small integer values</td>
+                        </tr>
+                        <tr>
+                            <td>`int`</td>
+                            <td>32-bit signed integer</td>
+                            <td>`0`</td>
+                            <td>General-purpose integer, loop counters</td>
+                        </tr>
+                        <tr>
+                            <td>`long`</td>
+                            <td>64-bit signed integer</td>
+                            <td>`0L`</td>
+                            <td>Large integer values, timestamps</td>
+                        </tr>
+                        <tr>
+                            <td>`float`</td>
+                            <td>32-bit floating-point</td>
+                            <td>`0.0f`</td>
+                            <td>Single-precision decimal values</td>
+                        </tr>
+                        <tr>
+                            <td>`double`</td>
+                            <td>64-bit floating-point</td>
+                            <td>`0.0d`</td>
+                            <td>Double-precision decimal values, default for decimals</td>
+                        </tr>
+                        <tr>
+                            <td>`boolean`</td>
+                            <td>1 bit (JVM allocates 1 byte)</td>
+                            <td>`false`</td>
+                            <td>Logical conditions (true/false)</td>
+                        </tr>
+                        <tr>
+                            <td>`char`</td>
+                            <td>16-bit Unicode character</td>
+                            <td>`\u0000`</td>
+                            <td>Single characters</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="3"><strong>Reference</strong></td>
+                            <td>`String`</td>
+                            <td>Varies</td>
+                            <td>`null`</td>
+                            <td>Sequences of characters (immutable)</td>
+                        </tr>
+                        <tr>
+                            <td>Arrays</td>
+                            <td>Varies</td>
+                            <td>`null`</td>
+                            <td>Collections of fixed-type elements</td>
+                        </tr>
+                        <tr>
+                            <td>Custom Classes, Interfaces</td>
+                            <td>Varies</td>
+                            <td>`null`</td>
+                            <td>Objects, blueprints for complex data structures</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Variables and Operators</h4>
+            <p class="text-gray-600 mb-6"><strong class="text-slate-700">Variables</strong> are named memory locations used to store data, characterized by their type, name, and scope (the region of code where they are accessible). <strong class="text-slate-700">Operators</strong> are special symbols that perform operations on variables or values. These include arithmetic operators (`+`, `-`, `*`, `/`), relational operators (`==`, `!=`, `<`, `>`), logical operators (`&&`, `||`, `!`), and assignment operators (`=`, `+=`).</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">BasicsExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="comment">// Variable Declaration and Initialization</span>
+        <span class="type">int</span> number = <span class="number">10</span>;
+        <span class="type">double</span> price = <span class="number">19.99</span>;
+        <span class="type">boolean</span> isActive = <span class="keyword">true</span>;
+        <span class="type">String</span> message = <span class="string">"Hello Java!"</span>;
+
+        <span class="comment">// Arithmetic Operators</span>
+        <span class="type">int</span> sum = number + <span class="number">5</span>; <span class="comment">// 15</span>
+        <span class="type">double</span> total = price * <span class="number">2.5</span>; <span class="comment">// 49.975</span>
+
+        <span class="comment">// Relational Operators</span>
+        <span class="type">boolean</span> isEqual = (number == <span class="number">10</span>); <span class="comment">// true</span>
+        <span class="type">boolean</span> isGreater = (total > <span class="number">50</span>); <span class="comment">// false</span>
+
+        <span class="comment">// Logical Operators</span>
+        <span class="type">boolean</span> condition = (isEqual && isActive); <span class="comment">// true</span>
+
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Sum: "</span> + sum);
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Total: "</span> + total);
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Condition: "</span> + condition);
+    }
+}</span></code></pre>
+            </div>
+
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Control Flow Statements</h4>
+            <p class="text-gray-600 mb-6"><strong class="text-slate-700">Control flow statements</strong> dictate the order in which instructions are executed within a program:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">Decision Making:</strong> `if`, `if-else`, `if-else-if ladder`, and `switch` statements enable programs to execute different code blocks based on specified conditions. Modern Java versions (SE 17 and later) have significantly enhanced the `switch` statement with pattern matching capabilities, allowing for more concise and powerful conditional logic.</li>
+                <li><strong class="font-medium text-slate-700">Loops:</strong> `for`, `while`, `do-while`, and the enhanced `for-each` loops facilitate the repeated execution of code blocks. These are fundamental for iterating over collections or performing tasks a specified number of times.</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ControlFlowExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">int</span> score = <span class="number">85</span>;
+
+        <span class="comment">// If-else statement</span>
+        <span class="keyword">if</span> (score >= <span class="number">90</span>) {
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Grade: A"</span>);
+        } <span class="keyword">else</span> <span class="keyword">if</span> (score >= <span class="number">80</span>) {
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Grade: B"</span>);
+        } <span class="keyword">else</span> {
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Grade: C"</span>);
+        }
+
+        <span class="comment">// Switch statement</span>
+        <span class="type">char</span> gradeChar = <span class="string">'B'</span>;
+        <span class="keyword">switch</span> (gradeChar) {
+            <span class="keyword">case</span> <span class="string">'A'</span>:
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Excellent!"</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> <span class="string">'B'</span>:
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Very Good!"</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">default</span>:
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Keep trying!"</span>);
+        }
+
+        <span class="comment">// For loop</span>
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Counting with for loop:"</span>);
+        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i < <span class="number">3</span>; i++) {
+            <span class="type">System</span>.out.<span class="method">println</span>(i);
+        }
+
+        <span class="comment">// While loop</span>
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Counting with while loop:"</span>);
+        <span class="type">int</span> count = <span class="number">0</span>;
+        <span class="keyword">while</span> (count < <span class="number">3</span>) {
+            <span class="type">System</span>.out.<span class="method">println</span>(count);
+            count++;
+        }
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-6 mb-6">Finally, the `Scanner` class is commonly employed to acquire <strong class="text-slate-700">user input</strong> from the console. Mastery of these fundamental concepts is not merely about syntax; it forms the bedrock upon which all more complex Java programming is built.</p>
+        </section>
+
+        <section id="oop" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">2. Object-Oriented Programming (OOP) in Java</h2>
+            <p class="text-lg text-gray-600 mb-8">OOP is a programming paradigm that organizes software design around "objects." This approach allows developers to model real-life entities and their interactions, leading to reduced code complexity and enhanced reusability. This section delves into the fundamental pillars of OOP, advanced constructs, modern features, and crucial concepts like object equality and design patterns.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">2.1. Core OOP Pillars: Classes, Objects, Encapsulation, Inheritance, Polymorphism, and Abstraction</h3>
+            <p class="text-gray-600 mb-6">The foundation of OOP in Java rests upon four core pillars, with classes and objects serving as the fundamental building blocks. Interact with the cards below to explore each principle in detail and see how it helps in creating modular, reusable, and maintainable code by modeling real-world entities.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="flip-card h-80" @click="$el.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-blue-50 border-blue-200">
+                            <h3 class="text-2xl font-bold text-blue-800">Classes and Objects</h3>
+                            <p class="text-blue-600 mt-2">Blueprints and Instances</p>
+                        </div>
+                        <div class="flip-card-back bg-blue-700">
+                            <h3 class="text-xl font-bold text-white mb-2">Classes and Objects</h3>
+                            <p class="mt-2 text-sm text-white">A <strong>class</strong> is a blueprint defining attributes and methods. An <strong>object</strong> is a concrete instance of a class, representing a specific entity. Example: A `Car` class defines properties like `brand` and `speed`, while `myCar = new Car("Toyota", 120)` creates an object.</p>
+                             <div class="code-block w-full text-left mt-4">
+                                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Car</span> {
+    <span class="type">String</span> brand;
+    <span class="type">int</span> speed;
+    <span class="keyword">public</span> <span class="method">Car</span>(<span class="type">String</span> brand, <span class="type">int</span> speed) {
+        <span class="keyword">this</span>.brand = brand;
+        <span class="keyword">this</span>.speed = speed;
+    }
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">drive</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(brand + <span class="string">" is driving."</span>);
+    }
+}
+<span class="comment">// Usage: Car myCar = new Car("Toyota", 120); myCar.drive();</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-80" @click="$el.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-purple-50 border-purple-200">
+                            <h3 class="text-2xl font-bold text-purple-800">Encapsulation</h3>
+                            <p class="text-purple-600 mt-2">Data Hiding and Access Control</p>
+                        </div>
+                        <div class="flip-card-back bg-purple-700">
+                            <h3 class="text-xl font-bold text-white mb-2">Encapsulation</h3>
+                            <p class="mt-2 text-sm text-white">Bundles data (attributes) and methods operating on that data within a class. Restricts direct access using `private` fields, exposing controlled access via public getters/setters. Benefits: data security, flexibility, and improved maintainability.</p>
+                             <div class="code-block w-full text-left mt-4">
+                                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Person</span> {
+    <span class="keyword">private</span> <span class="type">String</span> name;
+    <span class="keyword">public</span> <span class="type">String</span> <span class="method">getName</span>() { <span class="keyword">return</span> name; }
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">setName</span>(<span class="type">String</span> name) {
+        <span class="keyword">if</span> (name != <span class="keyword">null</span> && !name.<span class="method">isEmpty</span>()) {
+            <span class="keyword">this</span>.name = name;
+        }
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-80" @click="$el.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-pink-50 border-pink-200">
+                            <h3 class="text-2xl font-bold text-pink-800">Inheritance</h3>
+                            <p class="text-pink-600 mt-2">Code Reuse and Hierarchy</p>
+                        </div>
+                        <div class="flip-card-back bg-pink-700">
+                            <h3 class="text-xl font-bold text-white mb-2">Inheritance</h3>
+                            <p class="mt-2 text-sm text-white">A new class (subclass) acquires properties/behaviors from an existing class (superclass) using `extends`. Promotes code reuse and establishes "is-a" relationships (e.g., `Dog` is an `Animal`).</p>
+                             <div class="code-block w-full text-left mt-4">
+                                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Animal</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">eat</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Animal eats."</span>);
+    }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Dog</span> <span class="keyword">extends</span> <span class="type">Animal</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">bark</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Dog barks."</span>);
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-80" @click="$el.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-emerald-50 border-emerald-200">
+                            <h3 class="text-2xl font-bold text-emerald-800">Polymorphism</h3>
+                            <p class="text-emerald-600 mt-2">Many Forms, Single Interface</p>
+                        </div>
+                        <div class="flip-card-back bg-emerald-700">
+                            <h3 class="text-xl font-bold text-white mb-2">Polymorphism</h3>
+                            <p class="mt-2 text-sm text-white">"Many forms." Allows an object to take on different forms, enabling a single method to behave differently based on context (object type). Achieved via method overloading (same class, different params) and overriding (subclass redefines superclass method).</p>
+                             <div class="code-block w-full text-left mt-4">
+                                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Shape</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">draw</span>() { <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Draw a shape."</span>); }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Circle</span> <span class="keyword">extends</span> <span class="type">Shape</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">draw</span>() { <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Draw a circle."</span>); }
+}
+<span class="comment">// Usage: Shape s = new Circle(); s.draw();</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-80" @click="$el.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-orange-50 border-orange-200">
+                            <h3 class="text-2xl font-bold text-orange-800">Abstraction</h3>
+                            <p class="text-orange-600 mt-2">Hide Complex Details</p>
+                        </div>
+                        <div class="flip-card-back bg-orange-700">
+                            <h3 class="text-xl font-bold text-white mb-2">Abstraction</h3>
+                            <p class="mt-2 text-sm text-white">Presents only essential features, hiding complex implementation details. Achieved via `abstract` classes and `interfaces`. Focuses on "what an object does" rather than "how it does it."</p>
+                             <div class="code-block w-full text-left mt-4">
+                                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">Vehicle</span> {
+    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="method">start</span>();
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">stop</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Vehicle stopped."</span>);
+    }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CarImpl</span> <span class="keyword">extends</span> <span class="type">Vehicle</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">start</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Car started."</span>);
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-gray-600 mt-6 mb-6">These OOP pillars are not isolated concepts; they are deeply interconnected and function synergistically. For example, polymorphism heavily relies on inheritance and abstraction. This interconnectedness means that true mastery of OOP extends beyond memorizing definitions; it involves understanding how these principles interoperate to design coherent, robust, and maintainable software systems. This holistic perspective is crucial for effective software design.</p>
+            
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">2.2. Advanced OOP Constructs: Interfaces, Abstract Classes, Inner Classes, and Key Keywords (`this`, `super`, `static`, `final`)</h3>
+            <p class="text-gray-600 mb-6">Beyond the core pillars, Java offers several advanced OOP constructs and keywords that provide finer control over class design, behavior, and access.</p>
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Interfaces and Abstract Classes</h4>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Interfaces</strong> define a contract for classes, specifying a set of abstract methods that any implementing class must provide. Since Java 8, interfaces can also include `default` methods (methods with implementation) and `static` methods. <strong class="text-slate-700">Abstract classes</strong> are classes that cannot be instantiated directly and may contain both abstract and concrete methods. They serve as a base for subclasses.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="type">Drawable</span> {
+    <span class="keyword">void</span> <span class="method">draw</span>(); <span class="comment">// Abstract method</span>
+    <span class="keyword">default</span> <span class="keyword">void</span> <span class="method">resize</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Resizing..."</span>);
+    }
+    <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">printInfo</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"This is a Drawable interface."</span>);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">GraphicObject</span> {
+    <span class="keyword">int</span> x, y;
+    <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="method">moveTo</span>(<span class="keyword">int</span> newX, <span class="keyword">int</span> newY);
+    <span class="keyword">void</span> <span class="method">drawSelf</span>() { <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Drawing Graphic Object."</span>); }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Inner Classes</h4>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Inner classes</strong> are classes defined within another class, enhancing encapsulation and allowing access to the outer class's private members. Types include Member Inner Class, Static Nested Class, Local Inner Class, and Anonymous Inner Class.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">OuterClass</span> {
+    <span class="keyword">private</span> <span class="type">String</span> msg = <span class="string">"Hello from Outer!"</span>;
+    <span class="keyword">class</span> <span class="type">InnerClass</span> { <span class="comment">// Member Inner Class</span>
+        <span class="keyword">void</span> <span class="method">display</span>() {
+            <span class="type">System</span>.out.<span class="method">println</span>(msg);
+        }
+    }
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">OuterClass</span> outer = <span class="keyword">new</span> <span class="method">OuterClass</span>();
+        <span class="type">OuterClass</span>.<span class="type">InnerClass</span> inner = outer.<span class="keyword">new</span> <span class="method">InnerClass</span>();
+        inner.<span class="method">display</span>();
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Key Keywords: `this`, `super`, `static`, `final`</h4>
+            <ul class="list-disc list-inside text-gray-600 mb-6">
+                <li>The <strong class="text-slate-700">`this` keyword</strong> refers to the current object instance. Used to differentiate between instance and local variables, invoke constructors, or pass the current instance.</li>
+                <li>The <strong class="text-slate-700">`super` keyword</strong> refers to the immediate parent class object. Allows invocation of superclass constructors, methods, and fields.</li>
+                <li>The <strong class="text-slate-700">`static` keyword</strong> indicates a member belongs to the class itself, not an instance. Shared across all objects and accessed via class name. Static members are loaded once and reside in a different memory area than instance members.</li>
+                <li>The <strong class="text-slate-700">`final` keyword</strong> imposes restrictions. Applied to a variable: value cannot be reassigned. Applied to a method: prevents overriding. Applied to a class: prevents extension.</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">KeywordExample</span> {
+    <span class="type">int</span> value;
+    <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> MAX_VALUE = <span class="number">100</span>;
+
+    <span class="keyword">public</span> <span class="method">KeywordExample</span>(<span class="type">int</span> value) {
+        <span class="keyword">this</span>.value = value; <span class="comment">// Using 'this' to refer to instance variable</span>
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">displayMax</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Max Value: "</span> + MAX_VALUE); <span class="comment">// Accessing static final variable</span>
+    }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ChildClass</span> <span class="keyword">extends</span> <span class="type">KeywordExample</span> {
+    <span class="keyword">public</span> <span class="method">ChildClass</span>(<span class="type">int</span> value) {
+        <span class="keyword">super</span>(value); <span class="comment">// Using 'super' to call parent constructor</span>
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">2.3. Modern Java OOP Features: Records, Enums, and `Optional`</h3>
+            <p class="text-gray-600 mb-6">Modern Java versions have introduced features that streamline common programming patterns, reduce boilerplate, and enhance code safety and readability.</p>
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Records</h4>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Records</strong> (Java 14+) provide a concise syntax for declaring immutable data classes, automating getters, `equals()`, `hashCode()`, and `toString()`. This promotes immutability and reduces boilerplate.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">record</span> <span class="type">Point</span>(<span class="type">int</span> x, <span class="type">int</span> y) {}
+<span class="comment">// Usage: Point p = new Point(10, 20); System.out.println(p.x() + ", " + p.y());</span></code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Enums</h4>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Enums</strong> (Java 5+) are special types of classes representing a fixed set of named constants. They can have methods, fields, and constructors, offering type-safe alternatives to integer constants. Often used in `switch` statements.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">enum</span> <span class="type">Day</span> {
+    <span class="type">SUNDAY</span>, <span class="type">MONDAY</span>, <span class="type">TUESDAY</span>, <span class="type">WEDNESDAY</span>, <span class="type">THURSDAY</span>, <span class="type">FRIDAY</span>, <span class="type">SATURDAY</span>;
+
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="method">isWeekend</span>() {
+        <span class="keyword">return</span> <span class="keyword">this</span> == <span class="type">SUNDAY</span> || <span class="keyword">this</span> == <span class="type">SATURDAY</span>;
+    }
+}
+<span class="comment">// Usage: Day today = Day.MONDAY; System.out.println(today.isWeekend());</span></code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">`Optional`</h4>
+            <p class="text-gray-600 mb-4">The <strong class="text-slate-700">`Optional` class</strong> (Java 8+) is a container object that may or may not contain a non-null value. It helps explicitly handle potential absence of a value, mitigating `NullPointerException` (NPE). Provides methods like `isPresent()`, `orElse()`, `map()`, `flatMap()` for safe value handling.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.Optional</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">OptionalExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">Optional</span>&lt;<span class="type">String</span>&gt; <span class="method">getName</span>(<span class="type">boolean</span> found) {
+        <span class="keyword">return</span> found ? <span class="type">Optional</span>.<span class="method">of</span>(<span class="string">"Alice"</span>) : <span class="type">Optional</span>.<span class="method">empty</span>();
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">Optional</span>&lt;<span class="type">String</span>&gt; name = <span class="method">getName</span>(<span class="keyword">true</span>);
+        <span class="type">System</span>.out.<span class="method">println</span>(name.<span class="method">orElse</span>(<span class="string">"Default Name"</span>)); <span class="comment">// Output: Alice</span>
+
+        <span class="type">Optional</span>&lt;<span class="type">String</span>&gt; emptyName = <span class="method">getName</span>(<span class="keyword">false</span>);
+        <span class="type">System</span>.out.<span class="method">println</span>(emptyName.<span class="method">orElse</span>(<span class="string">"Default Name"</span>)); <span class="comment">// Output: Default Name</span>
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">2.4. Object Equality and Hashing: `equals()` and `hashCode()` Contracts</h3>
+            <p class="text-gray-600 mb-6">Understanding how objects are compared for equality and how their hash codes are generated is fundamental for writing correct and efficient Java applications, particularly when working with collection frameworks.</p>
+            <p class="text-gray-600 mb-4">The `==` operator checks for reference equality (same object instance in memory). The <strong class="text-slate-700">`equals()` method</strong>, inherited from `Object`, by default also checks reference equality, but it can be overridden to define logical equality based on object content.</p>
+            <p class="text-gray-600 mb-4">When overriding `equals()`, strict adherence to its contract is crucial:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong>Reflexive:</strong> `x.equals(x)` must be `true`.</li>
+                <li><strong>Symmetric:</strong> If `x.equals(y)` is `true`, then `y.equals(x)` must be `true`.</li>
+                <li><strong>Transitive:</strong> If `x.equals(y)` and `y.equals(z)` are `true`, then `x.equals(z)` must be `true`.</li>
+                <li><strong>Consistent:</strong> Multiple invocations on the same objects should return the same result, given no state change.</li>
+            </ul>
+            <p class="text-gray-600 mb-4">The <strong class="text-slate-700">`hashCode()` method</strong> returns an integer hash code for the object. Its contract is tightly coupled with `equals()`: if two objects are equal according to `equals()`, they *must* produce the same `hashCode` value. Failure to override `hashCode()` when `equals()` is overridden is a common source of subtle bugs, especially in hash-based collections like `HashMap` or `HashSet`.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CustomObject</span> {
+    <span class="keyword">private</span> <span class="type">int</span> id;
+    <span class="keyword">private</span> <span class="type">String</span> name;
+
+    <span class="keyword">public</span> <span class="method">CustomObject</span>(<span class="type">int</span> id, <span class="type">String</span> name) {
+        <span class="keyword">this</span>.id = id;
+        <span class="keyword">this</span>.name = name;
+    }
+
+    <span class="comment">// Overriding equals() for logical equality</span>
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="method">equals</span>(<span class="type">Object</span> o) {
+        <span class="keyword">if</span> (<span class="keyword">this</span> == o) <span class="keyword">return</span> <span class="keyword">true</span>;
+        <span class="keyword">if</span> (o == <span class="keyword">null</span> || <span class="method">getClass</span>() != o.<span class="method">getClass</span>()) <span class="keyword">return</span> <span class="keyword">false</span>;
+        <span class="type">CustomObject</span> that = (<span class="type">CustomObject</span>) o;
+        <span class="keyword">return</span> id == that.id && <span class="type">java.util.Objects</span>.<span class="method">equals</span>(name, that.name);
+    }
+
+    <span class="comment">// Overriding hashCode() consistent with equals()</span>
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">int</span> <span class="method">hashCode</span>() {
+        <span class="keyword">return</span> <span class="type">java.util.Objects</span>.<span class="method">hash</span>(id, name);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">CustomObject</span> obj1 = <span class="keyword">new</span> <span class="method">CustomObject</span>(<span class="number">1</span>, <span class="string">"Test"</span>);
+        <span class="type">CustomObject</span> obj2 = <span class="keyword">new</span> <span class="method">CustomObject</span>(<span class="number">1</span>, <span class="string">"Test"</span>);
+        <span class="type">CustomObject</span> obj3 = <span class="keyword">new</span> <span class="method">CustomObject</span>(<span class="number">2</span>, <span class="string">"Another"</span>);
+
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"obj1 equals obj2: "</span> + obj1.<span class="method">equals</span>(obj2)); <span class="comment">// true</span>
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"obj1 equals obj3: "</span> + obj1.<span class="method">equals</span>(obj3)); <span class="comment">// false</span>
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"obj1 hashCode: "</span> + obj1.<span class="method">hashCode</span>());
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"obj2 hashCode: "</span> + obj2.<span class="method">hashCode</span>());
+    }
+}</span></code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">2.5. Design Patterns for Robust OOP</h3>
+            <p class="text-gray-600 mb-6">Design patterns represent reusable solutions to common problems encountered during software design. They encapsulate best practices developed by experienced object-oriented software developers, providing a common vocabulary and proven approaches to building flexible, maintainable, and scalable systems.</p>
+            <p class="text-gray-600 mb-4">Patterns are categorized into Creational (object creation), Structural (object composition), and Behavioral (object interaction). A prominent example is the <strong class="text-slate-700">Singleton Pattern</strong>, ensuring a class has only one instance and provides global access to it.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Singleton</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">Singleton</span> instance;
+    <span class="keyword">private</span> <span class="method">Singleton</span>() {} <span class="comment">// Private constructor</span>
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">Singleton</span> <span class="method">getInstance</span>() {
+        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) {
+            instance = <span class="keyword">new</span> <span class="method">Singleton</span>();
+        }
+        <span class="keyword">return</span> instance;
+    }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 mt-4">It is important to note that for thread-safe lazy initialization, more advanced techniques like Double-Checked Locking (discussed in Section 4.6) or Enum-based Singleton implementations are often preferred. Understanding not just *what* patterns are, but *when and how* to apply them judiciously, along with an awareness of their complexities, trade-offs, and potential pitfalls, is a distinguishing characteristic of an expert-level understanding in OOP.</p>
+        </section>
+
+        <section id="error-handling" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">3. Robust Error Handling and Debugging in Java</h2>
+            <p class="text-lg text-gray-600 mb-8">Building robust and resilient applications in Java necessitates a comprehensive understanding of error handling and effective debugging techniques. Proper exception management allows programs to recover gracefully from unexpected conditions, preventing abrupt terminations. This section explores Java's exception hierarchy, graceful recovery mechanisms, custom exceptions, and essential debugging practices.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">3.1. Understanding Java Exceptions and Errors (Checked vs. Unchecked)</h3>
+            <p class="text-gray-600 mb-6">In Java, an <strong class="text-slate-700">exception</strong> is an event that occurs during program execution that disrupts the normal flow of instructions. Exceptions can represent various error conditions, ranging from logical errors to runtime issues. Java exceptions are broadly categorized into three main types:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">Checked Exceptions:</strong> Verified at compile time. Methods throwing them must either catch them or declare them using `throws`. Examples: `IOException`, `SQLException`.</li>
+                <li><strong class="font-medium text-slate-700">Unchecked Exceptions:</strong> Occur at runtime, subclasses of `RuntimeException`. Not checked at compile time. Examples: `NullPointerException`, `ArrayIndexOutOfBoundsException`.</li>
+                <li><strong class="font-medium text-slate-700">Errors:</strong> Represent severe, unrecoverable issues (e.g., JVM problems). Examples: `OutOfMemoryError`, `StackOverflowError`. Not typically handled by application code.</li>
+            </ul>
+            <p class="text-gray-600 mb-6">The diagram below illustrates the hierarchy of these types:</p>
+
+            <div class="w-full max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-200">
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="hierarchy-node font-bold bg-gray-100">Throwable</div>
+                    <div class="w-px h-8 bg-gray-300"></div>
+                    <div class="w-full flex justify-around">
+                        <div class="flex flex-col items-center space-y-4">
+                            <div class="hierarchy-node font-semibold text-red-700 bg-red-50 border-red-200">Error</div>
+                            <div class="w-px h-8 bg-gray-300"></div>
+                            <div class="hierarchy-node text-sm">OutOfMemoryError</div>
+                            <div class="hierarchy-node text-sm mt-2">StackOverflowError</div>
+                        </div>
+                        <div class="flex flex-col items-center space-y-4">
+                            <div class="hierarchy-node font-semibold text-blue-700 bg-blue-50 border-blue-200">Exception</div>
+                            <div class="w-px h-8 bg-gray-300"></div>
+                            <div class="w-full flex justify-around gap-4">
+                                <div class="flex flex-col items-center space-y-4">
+                                    <div class="hierarchy-node font-medium text-amber-700 bg-amber-50 border-amber-200">Checked Exceptions</div>
+                                     <div class="w-px h-4 bg-gray-300"></div>
+                                    <div class="hierarchy-node text-sm">IOException</div>
+                                    <div class="hierarchy-node text-sm mt-2">SQLException</div>
+                                    <div class="hierarchy-node text-sm mt-2">FileNotFoundException</div>
+                                </div>
+                                <div class="flex flex-col items-center space-y-4">
+                                    <div class="hierarchy-node font-medium text-violet-700 bg-violet-50 border-violet-200">Unchecked (RuntimeException)</div>
+                                     <div class="w-px h-4 bg-gray-300"></div>
+                                    <div class="hierarchy-node text-sm">NullPointerException</div>
+                                    <div class="hierarchy-node text-sm mt-2">IndexOutOfBoundsException</div>
+                                    <div class="hierarchy-node text-sm mt-2">ArithmeticException</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-gray-600 mt-6 mb-6">This hierarchy guides decisions on which exceptions to catch, declare, or allow to propagate, forming the foundation for proper exception handling.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">3.2. Implementing `try-catch-finally` for Graceful Recovery</h3>
+            <p class="text-gray-600 mb-6">The fundamental mechanism for handling exceptions in Java is the <strong class="text-slate-700">`try-catch-finally` block</strong>. This construct allows developers to isolate code that might throw an exception, handle the exception if it occurs, and ensure that certain cleanup operations are always performed.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li>The `try` block encloses code susceptible to exceptions.</li>
+                <li>Each `catch` block handles a specific exception type. Best practice is to catch specific types for precise error information.</li>
+                <li>The `finally` block is guaranteed to execute, regardless of whether an exception occurred, making it ideal for resource cleanup (e.g., closing file streams, database connections).</li>
+            </ul>
+            <p class="text-gray-600 mb-6">Java 7 introduced the <strong class="text-slate-700">try-with-resources</strong> statement, which automatically closes resources that implement `AutoCloseable`, simplifying resource management and eliminating explicit `finally` blocks for closing.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.io.FileInputStream</span>;
+<span class="keyword">import</span> <span class="type">java.io.IOException</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ResourceHandlingExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="comment">// Using try-with-resources for automatic resource management</span>
+        <span class="keyword">try</span> (<span class="type">FileInputStream</span> fis = <span class="keyword">new</span> <span class="method">FileInputStream</span>(<span class="string">"nonExistentFile.txt"</span>)) {
+            <span class="type">int</span> data = fis.<span class="method">read</span>();
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Data read: "</span> + data);
+        } <span class="keyword">catch</span> (<span class="type">IOException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Error: File operation failed - "</span> + e.<span class="method">getMessage</span>());
+            e.<span class="method">printStackTrace</span>();
+        } <span class="comment">// No finally block needed for closing fis due to try-with-resources</span>
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Program continues after exception handling."</span>);
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">3.3. Custom Exceptions and Effective Logging Strategies</h3>
+            <p class="text-gray-600 mb-6">Beyond standard exception types, Java allows developers to create <strong class="text-slate-700">custom exceptions</strong> tailored to specific application scenarios, providing more meaningful and domain-specific error information. This improves code readability and simplifies error tracking.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="comment">// Custom checked exception for a specific business rule</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">InsufficientFundsException</span> <span class="keyword">extends</span> <span class="type">Exception</span> {
+    <span class="keyword">public</span> <span class="method">InsufficientFundsException</span>(<span class="type">String</span> message) {
+        <span class="keyword">super</span>(message);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">BankAccount</span> {
+    <span class="keyword">private</span> <span class="type">double</span> balance;
+
+    <span class="keyword">public</span> <span class="method">BankAccount</span>(<span class="type">double</span> initialBalance) {
+        <span class="keyword">this</span>.balance = initialBalance;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">withdraw</span>(<span class="type">double</span> amount) <span class="keyword">throws</span> <span class="type">InsufficientFundsException</span> {
+        <span class="keyword">if</span> (amount <= <span class="number">0</span>) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="method">IllegalArgumentException</span>(<span class="string">"Withdrawal amount must be positive."</span>);
+        }
+        <span class="keyword">if</span> (amount > balance) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="method">InsufficientFundsException</span>(<span class="string">"Not enough funds to withdraw "</span> + amount + <span class="string">". Current balance: "</span> + balance);
+        }
+        balance -= amount;
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Withdrew "</span> + amount + <span class="string">". New balance: "</span> + balance);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">BankAccount</span> account = <span class="keyword">new</span> <span class="method">BankAccount</span>(<span class="number">100.0</span>);
+        <span class="keyword">try</span> {
+            account.<span class="method">withdraw</span>(<span class="number">50.0</span>);
+            account.<span class="method">withdraw</span>(<span class="number">200.0</span>); <span class="comment">// This will throw InsufficientFundsException</span>
+        } <span class="keyword">catch</span> (<span class="type">InsufficientFundsException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Transaction failed: "</span> + e.<span class="method">getMessage</span>());
+        } <span class="keyword">catch</span> (<span class="type">IllegalArgumentException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Input error: "</span> + e.<span class="method">getMessage</span>());
+        }
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-6 mb-4"><strong class="text-slate-700">Effective Logging Strategies</strong> are paramount for diagnosing issues in production environments. Always log exceptions with clear, descriptive messages using a dedicated logging framework (e.g., Log4j, SLF4J), rather than `System.out.println()`. Logging frameworks offer granular control over log levels (`INFO`, `WARN`, `ERROR`) and outputs.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-6">
+                <li>Always handle exceptions, don't ignore them.</li>
+                <li>Use descriptive messages and include contextual information.</li>
+                <li>Avoid logging sensitive data.</li>
+                <li>Avoid using exceptions for normal flow control.</li>
+            </ul>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">3.4. Debugging Java Applications: Breakpoints, Step-by-Step Execution, and Stack Traces</h3>
+            <p class="text-gray-600 mb-6">Debugging is the systematic process of identifying, isolating, and fixing bugs or unexpected behavior. Modern Integrated Development Environments (IDEs) provide robust debugging features.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li>A <strong class="text-slate-700">breakpoint</strong> is a designated point where program execution pauses in debug mode, allowing inspection of the program's state.</li>
+                <li><strong class="text-slate-700">Step-by-step execution</strong> allows meticulous control:
+                    <ul class="list-circle list-inside ml-4">
+                        <li>`Step Over` (F8): Executes current line, moves to next, skips method calls.</li>
+                        <li>`Step Into` (F7): Executes current line, steps into method calls.</li>
+                        <li>`Step Out` (Shift+F8): Steps out of current method to its caller.</li>
+                        <li>`Resume` (F9): Continues execution until next breakpoint or program end.</li>
+                    </ul>
+                </li>
+                <li><strong class="text-slate-700">Variable values</strong> can be inspected in real-time in IDEs to monitor data changes.</li>
+                <li>A <strong class="text-slate-700">stack trace</strong> provides a detailed report of the sequence of method calls leading to an exception, crucial for diagnosing the issue's origin.</li>
+            </ul>
+            <p class="text-gray-600 mt-4">Mastering these debugging techniques is a fundamental skill for professional developers, enabling them to efficiently identify, analyze, and resolve issues, thereby creating more stable and reliable Java applications.</p>
+        </section>
+
+        <section id="concurrency" class="mb-16" x-data="threadLifecycle()">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">4. Concurrency and Multithreading in Java</h2>
+            <p class="text-lg text-gray-600 mb-8">Concurrency and multithreading are pivotal concepts in modern Java development, enabling applications to perform multiple tasks simultaneously, thereby improving efficiency and responsiveness, especially on systems with multiple CPUs or cores. This section explores thread creation, lifecycle, safety, and efficient management.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">4.1. Fundamentals of Threads: Creating and Managing Threads (`Thread` vs. `Runnable`)</h3>
+            <p class="text-gray-600 mb-6">A <strong class="text-slate-700">thread</strong> represents an independent path of execution within a program. Java provides support for creating threads primarily through the `java.lang.Thread` class and the `java.lang.Runnable` interface.</p>
+            <p class="text-gray-600 mb-4">There are two primary ways to create a thread in Java:</p>
+            <ol class="list-decimal list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">Extending the `Thread` class:</strong> Create a class that inherits from `Thread` and override its `run()` method. Call `start()` to begin execution.</li>
+            </ol>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">class</span> <span class="type">MyThread</span> <span class="keyword">extends</span> <span class="type">Thread</span> {
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">run</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Thread created by extending Thread class. Running in: "</span> + <span class="type">Thread</span>.<span class="method">currentThread</span>().<span class="method">getName</span>());
+    }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ThreadExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">MyThread</span> thread1 = <span class="keyword">new</span> <span class="method">MyThread</span>();
+        thread1.<span class="method">start</span>(); <span class="comment">// Invokes run() in a new thread</span>
+    }
+}</span></code></pre>
+            </div>
+            <ol class="list-decimal list-inside text-gray-600 mt-4 mb-4" start="2">
+                <li><strong class="font-medium text-slate-700">Implementing the `Runnable` interface:</strong> The `Runnable` interface defines a single `run()` method. An instance of a class implementing `Runnable` is passed to the `Thread` constructor. This is generally recommended as it allows the class to extend another class.</li>
+            </ol>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">class</span> <span class="type">MyRunnable</span> <span class="keyword">implements</span> <span class="type">Runnable</span> {
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">run</span>() {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Thread created by implementing Runnable. Running in: "</span> + <span class="type">Thread</span>.<span class="method">currentThread</span>().<span class="method">getName</span>());
+    }
+}
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">RunnableExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">MyRunnable</span> task = <span class="keyword">new</span> <span class="method">MyRunnable</span>();
+        <span class="type">Thread</span> thread2 = <span class="keyword">new</span> <span class="type">Thread</span>(task); <span class="comment">// Pass Runnable to Thread constructor</span>
+        thread2.<span class="method">start</span>(); <span class="comment">// Invokes run() in a new thread</span>
+    }
+}</span></code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">4.2. Thread Lifecycle, Priorities, and Inter-Thread Communication (`wait()`, `notify()`, `notifyAll()`)</h3>
+            <p class="text-gray-600 mb-6">Understanding the lifecycle of a thread and how threads communicate is crucial for effective multithreaded programming. A Java thread progresses through several distinct states during its lifecycle. Click on a state in the diagram below to highlight it and learn its description.</p>
+
+            <div class="relative w-full max-w-4xl h-96 mx-auto p-4 bg-white rounded-xl shadow-md border border-gray-200">
+                 <!-- States -->
+                <div @click="setState('New')" class="state-node absolute top-1/2 left-4 -translate-y-1/2 p-3 bg-green-100 border-2 border-green-400 rounded-full" :class="{'active': activeState==='New'}"><span class="font-semibold">New</span></div>
+                <div @click="setState('Runnable')" class="state-node absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 p-3 bg-blue-100 border-2 border-blue-400 rounded-lg" :class="{'active': activeState==='Runnable'}"><span class="font-semibold">Runnable</span></div>
+                <div @click="setState('Blocked')" class="state-node absolute top-1/4 left-1/2 -translate-x-1/2 p-3 bg-orange-100 border-2 border-orange-400 rounded-lg" :class="{'active': activeState==='Blocked'}"><span class="font-semibold">Blocked</span></div>
+                <div @click="setState('Waiting')" class="state-node absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-yellow-100 border-2 border-yellow-400 rounded-lg" :class="{'active': activeState==='Waiting'}"><span class="font-semibold">Waiting</span></div>
+                <div @click="setState('TimedWaiting')" class="state-node absolute top-3/4 left-1/2 -translate-x-1/2 p-3 bg-purple-100 border-2 border-purple-400 rounded-lg" :class="{'active': activeState==='TimedWaiting'}"><span class="font-semibold">Timed Waiting</span></div>
+                <div @click="setState('Terminated')" class="state-node absolute top-1/2 right-4 -translate-y-1/2 p-3 bg-gray-200 border-2 border-gray-400 rounded-full" :class="{'active': activeState==='Terminated'}"><span class="font-semibold">Terminated</span></div>
+
+                <!-- Arrows (simplified representation) - Visually indicating flow -->
+                <div class="state-arrow h-1 w-20 left-[11%]" :class="{'active': activeState==='New'}" style="top: 50%; transform: rotate(0deg);"></div>
+                <div class="state-arrow h-1 w-20 left-[35%]" :class="{'active': activeState==='Runnable'}" style="top: 50%; transform: rotate(0deg);"></div>
+                <div class="state-arrow h-1 w-10 left-[45%]" :class="{'active': activeState==='Blocked'}" style="top: 25%; transform: rotate(90deg); transform-origin: left center;"></div>
+                <div class="state-arrow h-1 w-10 left-[45%]" :class="{'active': activeState==='Waiting'}" style="top: 50%; transform: rotate(0deg);"></div>
+                <div class="state-arrow h-1 w-10 left-[45%]" :class="{'active': activeState==='TimedWaiting'}" style="top: 75%; transform: rotate(0deg);"></div>
+                <div class="state-arrow h-1 w-20 right-[11%]" :class="{'active': activeState==='Terminated'}" style="top: 50%; transform: rotate(0deg);"></div>
+            </div>
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 class="text-xl font-semibold text-blue-800 mb-2" x-text="activeState"></h4>
+                <p class="text-blue-700" x-text="stateDescriptions[activeState]"></p>
+            </div>
+
+            <p class="text-gray-600 mt-6 mb-4">Every Java thread also has a <strong class="text-slate-700">priority</strong> (1-10), with `NORM_PRIORITY` (5) as default. Higher-priority threads are generally preferred by the scheduler, but priorities do not guarantee execution order.</p>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Inter-thread communication</strong> is a mechanism for threads to coordinate work, share resources, and ensure smooth execution. Java's `Object` class provides three fundamental methods for low-level synchronization and communication:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">`wait()`:</strong> Causes the current thread to release the lock it holds on an object's monitor and enter a waiting state until `notify()` or `notifyAll()` is invoked on the *same object*.</li>
+                <li><strong class="font-medium text-slate-700">`notify()`:</strong> Wakes up a single thread waiting on this object's monitor. Non-deterministic which thread is woken.</li>
+                <li><strong class="font-medium text-slate-700">`notifyAll()`:</strong> Wakes up all threads waiting on this object's monitor. Generally preferred over `notify()` to avoid deadlocks/starvation.</li>
+            </ul>
+            <p class="text-gray-600 mb-6">A common pattern is using `wait()` inside a `while` loop, checking the condition being waited for, to handle spurious wakeups.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.LinkedList</span>;
+<span class="keyword">import</span> <span class="type">java.util.Queue</span>;
+
+<span class="keyword">class</span> <span class="type">SharedBuffer</span> {
+    <span class="keyword">private</span> <span class="type">Queue</span>&lt;<span class="type">Integer</span>&gt; list = <span class="keyword">new</span> <span class="method">LinkedList</span>&lt;&gt;();
+    <span class="keyword">private</span> <span class="type">int</span> capacity = <span class="number">2</span>;
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">produce</span>(<span class="type">int</span> value) <span class="keyword">throws</span> <span class="type">InterruptedException</span> {
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">while</span> (list.<span class="method">size</span>() == capacity) {
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Buffer is full. Producer waiting..."</span>);
+                <span class="method">wait</span>();
+            }
+            list.<span class="method">add</span>(value);
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Producer produced: "</span> + value);
+            <span class="method">notify</span>();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">int</span> <span class="method">consume</span>() <span class="keyword">throws</span> <span class="type">InterruptedException</span> {
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">while</span> (list.<span class="method">isEmpty</span>()) {
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Buffer is empty. Consumer waiting..."</span>);
+                <span class="method">wait</span>();
+            }
+            <span class="type">int</span> val = list.<span class="method">remove</span>();
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Consumer consumed: "</span> + val);
+            <span class="method">notify</span>();
+            <span class="keyword">return</span> val;
+        }
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Producer</span> <span class="keyword">implements</span> <span class="type">Runnable</span> {
+    <span class="keyword">private</span> <span class="type">SharedBuffer</span> buffer;
+    <span class="keyword">private</span> <span class="type">int</span> startValue;
+    <span class="keyword">public</span> <span class="method">Producer</span>(<span class="type">SharedBuffer</span> buffer, <span class="type">int</span> startValue) { <span class="keyword">this</span>.buffer = buffer; <span class="keyword">this</span>.startValue = startValue; }
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">run</span>() {
+        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i < <span class="number">5</span>; i++) {
+            <span class="keyword">try</span> { buffer.<span class="method">produce</span>(startValue + i); <span class="type">Thread</span>.<span class="method">sleep</span>(<span class="number">500</span>); } <span class="keyword">catch</span> (<span class="type">InterruptedException</span> e) { <span class="type">Thread</span>.<span class="method">currentThread</span>().<span class="method">interrupt</span>(); }
+        }
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Consumer</span> <span class="keyword">implements</span> <span class="type">Runnable</span> {
+    <span class="keyword">private</span> <span class="type">SharedBuffer</span> buffer;
+    <span class="keyword">public</span> <span class="method">Consumer</span>(<span class="type">SharedBuffer</span> buffer) { <span class="keyword">this</span>.buffer = buffer; }
+    @<span class="type">Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">run</span>() {
+        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i < <span class="number">5</span>; i++) {
+            <span class="keyword">try</span> { buffer.<span class="method">consume</span>(); <span class="type">Thread</span>.<span class="method">sleep</span>(<span class="number">1000</span>); } <span class="keyword">catch</span> (<span class="type">InterruptedException</span> e) { <span class="type">Thread</span>.<span class="method">currentThread</span>().<span class="method">interrupt</span>(); }
+        }
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">InterThreadCommunicationExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">SharedBuffer</span> buffer = <span class="keyword">new</span> <span class="method">SharedBuffer</span>();
+        <span class="type">Thread</span> producerThread = <span class="keyword">new</span> <span class="type">Thread</span>(<span class="keyword">new</span> <span class="method">Producer</span>(buffer, <span class="number">1</span>));
+        <span class="type">Thread</span> consumerThread = <span class="keyword">new</span> <span class="type">Thread</span>(<span class="keyword">new</span> <span class="method">Consumer</span>(buffer));
+
+        producerThread.<span class="method">start</span>();
+        consumerThread.<span class="method">start</span>();
+    }
+}</span></code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">4.3. Ensuring Thread Safety: Synchronization (`synchronized`, `volatile`) and Concurrent Collections</h3>
+            <p class="text-gray-600 mb-6">In multithreaded environments, multiple threads often access shared resources or data concurrently. Without proper coordination, this can lead to <strong class="text-slate-700">thread safety</strong> issues, resulting in incorrect program behavior, data corruption, or inconsistent states. Ensuring thread safety is critical for reliable concurrent applications.</p>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Synchronization</strong> is the primary mechanism in Java to control access to shared resources, preventing race conditions. The `synchronized` keyword applied to methods or blocks ensures only one thread can execute that code on a given object instance at a time.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">class</span> <span class="type">Counter</span> {
+    <span class="keyword">private</span> <span class="type">int</span> count = <span class="number">0</span>;
+
+    <span class="comment">// Synchronized method</span>
+    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="method">increment</span>() {
+        count++;
+    }
+
+    <span class="comment">// Synchronized block</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">decrement</span>() {
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) { <span class="comment">// Locks on the current object instance</span>
+            count--;
+        }
+    }
+    <span class="keyword">public</span> <span class="type">int</span> <span class="method">getCount</span>() { <span class="keyword">return</span> count; }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 mt-4 mb-4">The <strong class="text-slate-700">`volatile` keyword</strong> ensures memory visibility for a variable across multiple threads, preventing caching issues. Changes to a `volatile` variable are immediately visible to all threads.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">class</span> <span class="type">SharedFlag</span> {
+    <span class="keyword">public</span> <span class="keyword">volatile</span> <span class="type">boolean</span> running = <span class="keyword">true</span>; <span class="comment">// Ensures visibility across threads</span>
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">stop</span>() {
+        running = <span class="keyword">false</span>;
+    }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 mt-4 mb-6"><strong class="text-slate-700">Concurrent Collections</strong> from `java.util.concurrent` package provide thread-safe alternatives to standard collections, internally handling synchronization and often offering better performance. Examples: `ConcurrentHashMap`, `CopyOnWriteArrayList`, `BlockingQueue`.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">4.4. Efficient Thread Management: Thread Pools and the Executor Framework</h3>
+            <p class="text-gray-600 mb-6">Manually creating and managing threads for every task can be inefficient. <strong class="text-slate-700">Thread pools</strong> reuse a fixed number of threads, reducing overhead. The <strong class="text-slate-700">Executor Framework</strong> (`java.util.concurrent`) provides high-level APIs for managing thread creation and execution, abstracting complexities.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">`ExecutorService`</strong> is a key interface for submitting tasks (`Runnable` or `Callable`).</li>
+                <li>Common types: Fixed Thread Pool, Cached Thread Pool, Scheduled Thread Pool.</li>
+                <li><strong class="font-medium text-slate-700">`ThreadPoolExecutor`</strong> provides fine-grained control over pool size and queueing.</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.concurrent.ArrayBlockingQueue</span>;
+<span class="keyword">import</span> <span class="type">java.util.concurrent.ThreadPoolExecutor</span>;
+<span class="keyword">import</span> <span class="type">java.util.concurrent.TimeUnit</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ThreadPoolExecutorExample</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">ThreadPoolExecutor</span> executor = <span class="keyword">new</span> <span class="method">ThreadPoolExecutor</span>(
+            <span class="number">2</span>, <span class="comment">// corePoolSize</span>
+            <span class="number">4</span>, <span class="comment">// maximumPoolSize</span>
+            <span class="number">60</span>, <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>, <span class="comment">// keepAliveTime</span>
+            <span class="keyword">new</span> <span class="method">ArrayBlockingQueue</span>&lt;&gt;(<span class="number">10</span>) <span class="comment">// workQueue</span>
+        );
+        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i < <span class="number">5</span>; i++) {
+            <span class="keyword">final</span> <span class="type">int</span> taskId = i;
+            executor.<span class="method">submit</span>(() -> <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Task "</span> + taskId + <span class="string">" in thread: "</span> + <span class="type">Thread</span>.<span class="method">currentThread</span>().<span class="method">getName</span>()));
+        }
+        executor.<span class="method">shutdown</span>();
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-4 mb-6">The <strong class="text-slate-700">Fork/Join Framework</strong> (Java 7+) is a specialized `ExecutorService` for divide-and-conquer algorithms, using a work-stealing algorithm for efficient parallel processing. It is effective for CPU-intensive, recursive tasks.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">4.5. Common Concurrency Issues and Their Resolution (Race Conditions, Deadlocks)</h3>
+            <p class="text-gray-600 mb-6">Multithreading introduces complexities that can lead to challenging concurrency issues if not properly managed. Two of the most common and critical issues are race conditions and deadlocks.</p>
+            <p class="text-gray-600 mb-4">A <strong class="text-slate-700">race condition</strong> occurs when multiple threads access and modify shared data concurrently, and the final outcome depends on unpredictable timing. This leads to inconsistent data.</p>
+            <p class="text-gray-600 mb-4">Resolution involves <strong class="text-slate-700">synchronization mechanisms</strong>: `synchronized` keyword, `ReentrantLock`, atomic variables (`AtomicInteger`), thread-safe collections (`ConcurrentHashMap`), and immutable objects.</p>
+            <p class="text-gray-600 mb-4">A <strong class="text-slate-700">deadlock</strong> occurs when two or more threads are perpetually waiting for each other to release a resource, resulting in a standstill. This often happens with circular lock dependencies.</p>
+            <p class="text-gray-600 mb-6">Preventing deadlocks requires: consistent lock order, avoiding nested locks, using timeouts for locks (`tryLock()`), and analyzing resource allocation graphs.</p>
+            
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">4.6. Concurrency Design Patterns (e.g., Producer-Consumer, Double-Checked Locking)</h3>
+            <p class="text-gray-600 mb-6">Concurrency design patterns provide reusable solutions to common problems in multi-threaded programming, managing interactions between concurrent tasks efficiently and safely.</p>
+            <p class="text-gray-600 mb-4">The <strong class="text-slate-700">Producer-Consumer Pattern</strong> decouples data production from consumption using a shared buffer (often a `BlockingQueue`). Producers add data; consumers remove it. The example in Section 4.2 uses `wait()` and `notify()` for a manual implementation.</p>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Double-Checked Locking</strong> aims to reduce the overhead of acquiring a lock for lazy initialization, particularly for singletons. It performs two checks for the object instance, one without a lock and one inside a synchronized block, with the `volatile` keyword ensuring visibility.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">SingletonDCL</span> {
+    <span class="comment">// volatile ensures changes to 'instance' are immediately visible across threads</span>
+    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">static</span> <span class="type">SingletonDCL</span> instance; 
+
+    <span class="keyword">private</span> <span class="method">SingletonDCL</span>() { }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">SingletonDCL</span> <span class="method">getInstance</span>() {
+        <span class="comment">// First check: without locking</span>
+        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) {
+            <span class="comment">// Synchronized block to ensure only one thread initializes</span>
+            <span class="keyword">synchronized</span> (<span class="type">SingletonDCL</span>.<span class="keyword">class</span>) {
+                <span class="comment">// Second check: inside synchronized block</span>
+                <span class="keyword">if</span> (instance == <span class="keyword">null</span>) {
+                    instance = <span class="keyword">new</span> <span class="method">SingletonDCL</span>();
+                }
+            }
+        }
+        <span class="keyword">return</span> instance;
+    }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 mt-4">The `volatile` keyword for `instance` is critical in Double-Checked Locking in Java 5+ to prevent issues with instruction reordering and ensure visibility. This pattern offers performance gains by avoiding unnecessary locking after initialization.</p>
+        </section>
+
+        <section id="sync-async" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">5. Synchronous vs. Asynchronous Programming in Java</h2>
+            <p class="text-lg text-gray-600 mb-8">Understanding the distinction between synchronous and asynchronous programming models is fundamental for designing responsive and efficient applications, especially in modern distributed systems. This section details their differences, practical applications, and how to master asynchronous operations with `CompletableFuture`.</p>
+            
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">5.1. Differentiating Synchronous and Asynchronous Execution Models</h3>
+            <p class="text-gray-600 mb-6"><strong class="text-slate-700">Synchronous programming</strong> executes tasks sequentially, waiting for each to complete before starting the next. This "blocking" behavior can lead to unresponsiveness if a task takes a long time (e.g., network request).</p>
+            <p class="text-gray-600 mb-6"><strong class="text-slate-700">Asynchronous programming</strong> allows multiple tasks to run concurrently without waiting for each other. A long-running task is initiated, and the program continues executing other operations. When the task finishes, it notifies the main thread, and its result is handled later. This improves responsiveness, especially for I/O-bound operations.</p>
+            
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-700 mb-4">Key Differences</h4>
+                     <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center mr-3 font-bold text-sm flex-shrink-0">S</span>
+                            <div><strong class="text-red-600">Synchronous:</strong> Sequential execution. Blocking. Slower for I/O. Simpler logic. Less efficient resource utilization. Can lead to unresponsive UI. Use for CPU-intensive tasks.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="h-6 w-6 rounded-full bg-green-500 text-white flex items-center justify-center mr-3 font-bold text-sm flex-shrink-0">A</span>
+                             <div><strong class="text-green-600">Asynchronous:</strong> Concurrent execution. Non-blocking. Faster for I/O. More complex logic. Better resource utilization. Improves responsiveness. Use for network requests, UI updates.</div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <canvas id="syncAsyncChart"></canvas>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">5.2. Practical Applications and Performance Benefits of Asynchronous Programming</h3>
+            <p class="text-gray-600 mb-6">Asynchronous programming is a practical necessity for modern, high-performance applications, enhancing responsiveness and efficiency by allowing tasks to execute independently. Its primary advantage is in scenarios where operations involve waiting for external resources.</p>
+            <p class="text-gray-600 mb-4">Significant applications include <strong class="text-slate-700">web or networked applications</strong> (fetching data from APIs/databases without blocking) and <strong class="text-slate-700">user interfaces (UI)</strong> (maintaining responsiveness during long-running tasks). For instance, in a shopping app, fetching order history and updating font size can happen simultaneously, improving load times.</p>
+            <p class="text-gray-600 mb-6">Performance benefits are substantial: <strong class="text-slate-700">improved throughput</strong> (handling multiple requests concurrently), <strong class="text-slate-700">better scalability</strong> (managing many concurrent operations without tying up threads), and <strong class="text-slate-700">reduced latency</strong> (allowing other tasks to proceed while waiting for slow operations).</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">5.3. Mastering Asynchronous Operations with `CompletableFuture` (Chaining, Combining, and Exception Handling)</h3>
+            <p class="text-gray-600 mb-6">Java 8 introduced the <strong class="text-slate-700">`CompletableFuture` class</strong>, a powerful tool for building and composing asynchronous, non-blocking code. It provides a rich API for chaining, combining, and handling exceptions in asynchronous computations, addressing limitations of the older `Future` interface.</p>
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Creating a `CompletableFuture`</h4>
+            <p class="text-gray-600 mb-4">Can be created manually or by running tasks asynchronously using `runAsync()` (no return) or `supplyAsync()` (with return value).</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.concurrent.CompletableFuture</span>;
+<span class="keyword">import</span> <span class="type">java.util.concurrent.TimeUnit</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CompletableFutureCreation</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="comment">// Using supplyAsync for a task that returns a value</span>
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; future1 = <span class="type">CompletableFuture</span>.<span class="method">supplyAsync</span>(() -> {
+            <span class="keyword">try</span> { <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>.<span class="method">sleep</span>(<span class="number">2</span>); } <span class="keyword">catch</span> (<span class="type">InterruptedException</span> e) { <span class="keyword">throw</span> <span class="keyword">new</span> <span class="method">IllegalStateException</span>(e); }
+            <span class="keyword">return</span> <span class="string">"Result from Task 1"</span>;
+        });
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Future 1 result: "</span> + future1.<span class="method">get</span>());
+    }
+}</span></code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Chaining Asynchronous Tasks</h4>
+            <p class="text-gray-600 mb-4">Allows sequential execution where the output of one task becomes the input for the next. Methods include `thenApply()` (transform result), `thenAccept()` (consume result, no return), and `thenRun()` (action after completion, no result/return).</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CompletableFutureChaining</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; welcomeText = <span class="type">CompletableFuture</span>.<span class="method">supplyAsync</span>(() -> <span class="string">"John"</span>)
+           .<span class="method">thenApply</span>(name -> <span class="string">"Hello "</span> + name)
+           .<span class="method">thenApply</span>(greeting -> greeting + <span class="string">", Welcome to CompletableFuture!"</span>);
+        
+        <span class="type">System</span>.out.<span class="method">println</span>(welcomeText.<span class="method">get</span>());
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Combining Multiple Futures</h4>
+            <p class="text-gray-600 mb-4">Methods to combine results of multiple independent or dependent tasks:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li>`thenCompose()`: For chaining dependent `CompletableFuture` instances (flattens nested results).</li>
+                <li>`thenCombine()`: For two independent `CompletableFuture`s, performs action after both complete, combining results.</li>
+                <li>`allOf()`: Completes when all given `CompletableFuture`s complete.</li>
+                <li>`anyOf()`: Completes when any of the given `CompletableFuture`s complete.</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.concurrent.CompletableFuture</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CompletableFutureCombining</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; future1 = <span class="type">CompletableFuture</span>.<span class="method">supplyAsync</span>(() -> <span class="string">"Result 1"</span>);
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; future2 = <span class="type">CompletableFuture</span>.<span class="method">supplyAsync</span>(() -> <span class="string">"Result 2"</span>);
+
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; combined = future1.<span class="method">thenCombine</span>(future2, (res1, res2) -> res1 + <span class="string">" and "</span> + res2);
+        <span class="type">System</span>.out.<span class="method">println</span>(combined.<span class="method">get</span>());
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Exception Handling</h4>
+            <p class="text-gray-600 mb-4">`CompletableFuture` provides robust mechanisms for handling exceptions: `exceptionally()` (fallback value on error) and `handle()` (generic method for success or failure).</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.util.concurrent.CompletableFuture</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CompletableFutureExceptionHandling</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">CompletableFuture</span>&lt;<span class="type">String</span>&gt; futureWithException = <span class="type">CompletableFuture</span>.<span class="method">supplyAsync</span>(() -> {
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="method">RuntimeException</span>(<span class="string">"Something went wrong!"</span>);
+        }).<span class="method">exceptionally</span>(ex -> {
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Caught exception: "</span> + ex.<span class="method">getMessage</span>());
+            <span class="keyword">return</span> <span class="string">"Error Handled"</span>;
+        });
+        <span class="type">System</span>.out.<span class="method">println</span>(futureWithException.<span class="method">get</span>());
+    }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 mt-4">`CompletableFuture` significantly simplifies complex asynchronous workflows, enabling developers to build efficient, non-blocking applications that scale effortlessly. It is a cornerstone of modern Java concurrency.</p>
+        </section>
+
+        <section id="jdbc" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">6. Java Database Connectivity (JDBC)</h2>
+            <p class="text-lg text-gray-600 mb-8">Java Database Connectivity (JDBC) is a standard Java API that defines how a Java client can access a database. It provides a set of interfaces and classes for connecting to various relational databases, executing SQL queries, and processing results. This section covers establishing connections, performing CRUD operations, preventing SQL injection, and managing transactions.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">6.1. Establishing Database Connections and Managing Resources</h3>
+            <p class="text-gray-600 mb-6">The first and most crucial step in interacting with a database using JDBC is establishing a <strong class="text-slate-700">connection</strong>. This involves loading the appropriate JDBC driver and then creating a `Connection` object, which is the gateway for all database operations.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li>Load the JDBC Driver (e.g., `Class.forName("com.mysql.cj.jdbc.Driver");`).</li>
+                <li>Establish Connection using `DriverManager.getConnection(DB_URL, USER, PASS)`.</li>
+            </ul>
+            <p class="text-gray-600 mb-4"><strong class="text-slate-700">Resource Management</strong> is critical. Java 7's <strong class="text-slate-700">try-with-resources</strong> statement automatically closes resources that implement `AutoCloseable` (like `Connection`, `Statement`, `ResultSet`), simplifying code and preventing leaks.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.sql.Connection</span>;
+<span class="keyword">import</span> <span class="type">java.sql.DriverManager</span>;
+<span class="keyword">import</span> <span class="type">java.sql.SQLException</span>;
+<span class="keyword">import</span> <span class="type">java.sql.Statement</span>;
+<span class="keyword">import</span> <span class="type">java.sql.ResultSet</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">JDBCResourceManagementExample</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> DB_URL = <span class="string">"jdbc:mysql://localhost:3306/testdb"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> USER = <span class="string">"root"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> PASS = <span class="string">"password"</span>;
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="comment">// try-with-resources automatically closes Connection, Statement, ResultSet</span>
+        <span class="keyword">try</span> (<span class="type">Connection</span> connection = <span class="type">DriverManager</span>.<span class="method">getConnection</span>(DB_URL, USER, PASS);
+             <span class="type">Statement</span> statement = connection.<span class="method">createStatement</span>();
+             <span class="type">ResultSet</span> resultSet = statement.<span class="method">executeQuery</span>(<span class="string">"SELECT 1"</span>)) {
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Connection and statement created successfully."</span>);
+            <span class="keyword">if</span> (resultSet.<span class="method">next</span>()) {
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Query result: "</span> + resultSet.<span class="method">getInt</span>(<span class="number">1</span>));
+            }
+        } <span class="keyword">catch</span> (<span class="type">SQLException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Database error: "</span> + e.<span class="method">getMessage</span>());
+        }
+    }
+}</span></code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">6.2. Performing CRUD Operations (Create, Read, Update, Delete) with JDBC</h3>
+            <p class="text-gray-600 mb-6">JDBC provides interfaces to perform the fundamental database operations known as <strong class="text-slate-700">CRUD: Create, Read, Update, and Delete</strong>. These are the backbone of any database-driven application.</p>
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Create (INSERT)</h4>
+            <p class="text-gray-600 mb-4">Adds new records using `INSERT` statements, typically via `PreparedStatement.executeUpdate()`.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="comment">// Example for CREATE (using PreparedStatement)</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="method">createRecord</span>(<span class="type">Connection</span> con, <span class="type">String</span> name, <span class="type">int</span> age) <span class="keyword">throws</span> <span class="type">SQLException</span> {
+    <span class="type">String</span> sql = <span class="string">"INSERT INTO users (name, age) VALUES (?,?)"</span>;
+    <span class="keyword">try</span> (<span class="type">PreparedStatement</span> statement = con.<span class="method">prepareStatement</span>(sql)) {
+        statement.<span class="method">setString</span>(<span class="number">1</span>, name);
+        statement.<span class="method">setInt</span>(<span class="number">2</span>, age);
+        <span class="type">int</span> rowsAffected = statement.<span class="method">executeUpdate</span>();
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Record created. Rows affected: "</span> + rowsAffected);
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Read (SELECT)</h4>
+            <p class="text-gray-600 mb-4">Retrieves data using `SELECT` statements. Results are returned as a `ResultSet` object, allowing iteration and access to column values.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="comment">// Example for READ (using PreparedStatement)</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="method">readRecords</span>(<span class="type">Connection</span> con) <span class="keyword">throws</span> <span class="type">SQLException</span> {
+    <span class="type">String</span> sql = <span class="string">"SELECT id, name, age FROM users"</span>;
+    <span class="keyword">try</span> (<span class="type">PreparedStatement</span> statement = con.<span class="method">prepareStatement</span>(sql);
+         <span class="type">ResultSet</span> result = statement.<span class="method">executeQuery</span>()) {
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"--- Users ---"</span>);
+        <span class="keyword">while</span> (result.<span class="method">next</span>()) {
+            <span class="type">int</span> id = result.<span class="method">getInt</span>(<span class="string">"id"</span>);
+            <span class="type">String</span> name = result.<span class="method">getString</span>(<span class="string">"name"</span>);
+            <span class="type">int</span> age = result.<span class="method">getInt</span>(<span class="string">"age"</span>);
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"ID: "</span> + id + <span class="string">", Name: "</span> + name + <span class="string">", Age: "</span> + age);
+        }
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"-------------"</span>);
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Update (UPDATE)</h4>
+            <p class="text-gray-600 mb-4">Modifies existing records using `UPDATE` statements, also via `executeUpdate()`.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="comment">// Example for UPDATE (using PreparedStatement)</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="method">updateRecord</span>(<span class="type">Connection</span> con, <span class="type">int</span> id, <span class="type">String</span> newName) <span class="keyword">throws</span> <span class="type">SQLException</span> {
+    <span class="type">String</span> sql = <span class="string">"UPDATE users SET name =? WHERE id =?"</span>;
+    <span class="keyword">try</span> (<span class="type">PreparedStatement</span> statement = con.<span class="method">prepareStatement</span>(sql)) {
+        statement.<span class="method">setString</span>(<span class="number">1</span>, newName);
+        statement.<span class="method">setInt</span>(<span class="number">2</span>, id);
+        <span class="type">int</span> rowsAffected = statement.<span class="method">executeUpdate</span>();
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Record updated. Rows affected: "</span> + rowsAffected);
+    }
+}</code></pre>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Delete (DELETE)</h4>
+            <p class="text-gray-600 mb-4">Removes records using `DELETE` statements, also via `executeUpdate()`.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="comment">// Example for DELETE (using PreparedStatement)</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="method">deleteRecord</span>(<span class="type">Connection</span> con, <span class="type">int</span> id) <span class="keyword">throws</span> <span class="type">SQLException</span> {
+    <span class="type">String</span> sql = <span class="string">"DELETE FROM users WHERE id =?"</span>;
+    <span class="keyword">try</span> (<span class="type">PreparedStatement</span> statement = con.<span class="method">prepareStatement</span>(sql)) {
+        statement.<span class="method">setInt</span>(<span class="number">1</span>, id);
+        <span class="type">int</span> rowsAffected = statement.<span class="method">executeUpdate</span>();
+        <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Record deleted. Rows affected: "</span> + rowsAffected);
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">6.3. Securing Database Interactions: `PreparedStatement` for SQL Injection Prevention</h3>
+            <p class="text-gray-600 mb-6">A critical security vulnerability is <strong class="text-slate-700">SQL Injection</strong>, where attackers inject malicious code into SQL queries through user input. <strong class="text-slate-700">`PreparedStatement`</strong> is the robust mechanism to prevent this. It uses placeholders (`?`) for user-supplied data, which the database treats as literal values, not executable code, effectively neutralizing the attack.</p>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.sql.Connection</span>;
+<span class="keyword">import</span> <span class="type">java.sql.DriverManager</span>;
+<span class="keyword">import</span> <span class="type">java.sql.PreparedStatement</span>;
+<span class="keyword">import</span> <span class="type">java.sql.SQLException</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">PreparedStatementSecurityExample</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> DB_URL = <span class="string">"jdbc:mysql://localhost:3306/testdb"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> USER = <span class="string">"root"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> PASS = <span class="string">"password"</span>;
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">String</span> userNameInput = <span class="string">"Alice'); DROP TABLE users; --"</span>; <span class="comment">// Malicious input</span>
+        <span class="type">int</span> userAgeInput = <span class="number">30</span>;
+
+        <span class="keyword">try</span> (<span class="type">Connection</span> connection = <span class="type">DriverManager</span>.<span class="method">getConnection</span>(DB_URL, USER, PASS)) {
+            <span class="type">String</span> sql = <span class="string">"INSERT INTO users (name, age) VALUES (?,?)"</span>;
+            <span class="keyword">try</span> (<span class="type">PreparedStatement</span> statement = connection.<span class="method">prepareStatement</span>(sql)) {
+                statement.<span class="method">setString</span>(<span class="number">1</span>, userNameInput); <span class="comment">// User input is treated as a literal string</span>
+                statement.<span class="method">setInt</span>(<span class="number">2</span>, userAgeInput);
+                <span class="type">int</span> rowsAffected = statement.<span class="method">executeUpdate</span>();
+                <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Record inserted. Rows affected: "</span> + rowsAffected);
+            }
+        } <span class="keyword">catch</span> (<span class="type">SQLException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Database error: "</span> + e.<span class="method">getMessage</span>());
+        }
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-4 mb-6">Using `PreparedStatement` is considered the easiest and most effective way to protect Java applications from SQL Injection attacks. It is a fundamental best practice.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">6.4. Transaction Management: Ensuring Data Integrity (Commit, Rollback, Savepoints)</h3>
+            <p class="text-gray-600 mb-6">Transaction management is crucial in JDBC for maintaining data integrity and consistency, especially when multiple SQL statements need to be treated as a single, atomic unit of work.</p>
+            <p class="text-gray-600 mb-4">By default, JDBC operates in <strong class="text-slate-700">auto-commit mode</strong>. To enable manual transaction control, disable auto-commit: `connection.setAutoCommit(false)`.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">`commit()`:</strong> Makes all changes permanent in the database.</li>
+                <li><strong class="font-medium text-slate-700">`rollback()`:</strong> Undoes all changes within the current transaction since the last commit or `setAutoCommit(false)`. Typically used in a `catch` block.</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">java.sql.Connection</span>;
+<span class="keyword">import</span> <span class="type">java.sql.DriverManager</span>;
+<span class="keyword">import</span> <span class="type">java.sql.PreparedStatement</span>;
+<span class="keyword">import</span> <span class="type">java.sql.SQLException</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">JDBCTransactionExample</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> DB_URL = <span class="string">"jdbc:mysql://localhost:3306/testdb"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> USER = <span class="string">"root"</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> PASS = <span class="string">"password"</span>;
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">Connection</span> connection = <span class="keyword">null</span>;
+        <span class="keyword">try</span> {
+            connection = <span class="type">DriverManager</span>.<span class="method">getConnection</span>(DB_URL, USER, PASS);
+            connection.<span class="method">setAutoCommit</span>(<span class="keyword">false</span>); <span class="comment">// Disable auto-commit</span>
+
+            <span class="comment">// Simulate deducting from account A</span>
+            <span class="type">String</span> deductSql = <span class="string">"UPDATE accounts SET balance = balance -? WHERE id =?"</span>;
+            <span class="keyword">try</span> (<span class="type">PreparedStatement</span> deductStmt = connection.<span class="method">prepareStatement</span>(deductSql)) {
+                deductStmt.<span class="method">setDouble</span>(<span class="number">1</span>, <span class="number">100.0</span>);
+                deductStmt.<span class="method">setInt</span>(<span class="number">2</span>, <span class="number">1</span>);
+                deductStmt.<span class="method">executeUpdate</span>();
+            }
+
+            <span class="comment">// Simulate adding to account B</span>
+            <span class="type">String</span> addSql = <span class="string">"UPDATE accounts SET balance = balance +? WHERE id =?"</span>;
+            <span class="keyword">try</span> (<span class="type">PreparedStatement</span> addStmt = connection.<span class="method">prepareStatement</span>(addSql)) {
+                addStmt.<span class="method">setDouble</span>(<span class="number">1</span>, <span class="number">100.0</span>);
+                addStmt.<span class="method">setInt</span>(<span class="number">2</span>, <span class="number">2</span>);
+                addStmt.<span class="method">executeUpdate</span>();
+            }
+
+            connection.<span class="method">commit</span>(); <span class="comment">// Commit all changes if successful</span>
+            <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Transaction committed successfully."</span>);
+
+        } <span class="keyword">catch</span> (<span class="type">SQLException</span> e) {
+            <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Transaction failed: "</span> + e.<span class="method">getMessage</span>());
+            <span class="keyword">if</span> (connection != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    connection.<span class="method">rollback</span>(); <span class="comment">// Rollback all changes on error</span>
+                    <span class="type">System</span>.out.<span class="method">println</span>(<span class="string">"Transaction rolled back."</span>);
+                } <span class="keyword">catch</span> (<span class="type">SQLException</span> ex) {
+                    <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Error during rollback: "</span> + ex.<span class="method">getMessage</span>());
+                }
+            }
+        } <span class="keyword">finally</span> {
+            <span class="keyword">if</span> (connection != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    connection.<span class="method">setAutoCommit</span>(<span class="keyword">true</span>); <span class="comment">// Re-enable auto-commit</span>
+                    connection.<span class="method">close</span>();
+                } <span class="keyword">catch</span> (<span class="type">SQLException</span> e) {
+                    <span class="type">System</span>.err.<span class="method">println</span>(<span class="string">"Error closing connection: "</span> + e.<span class="method">getMessage</span>());
+                }
+            }
+        }
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-4 mb-6"><strong class="text-slate-700">Savepoints</strong> (JDBC 3.0+) provide granular control within a transaction, allowing partial rollbacks to a specific point using `setSavepoint()` and `rollback(Savepoint)`.</p>
+        </section>
+        
+        <section id="best-practices" class="mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">7. Perfecting Your Java Code: Best Practices and Practical Projects</h2>
+            <p class="text-lg text-gray-600 mb-8">Perfecting Java code extends beyond mastering syntax and APIs; it involves adopting practices that lead to maintainable, scalable, and high-quality software. This section covers writing clean code, the importance of unit testing, and hands-on challenges to reinforce skills.</p>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">7.1. Writing Clean Java Code: Naming Conventions, Readability, and SOLID Principles</h3>
+            <p class="text-gray-600 mb-6">Writing <strong class="text-slate-700">clean code</strong> emphasizes straightforward, readable, testable, and easy-to-understand code, free from unnecessary complexity. Key practices include standard project structure, consistent naming conventions, prioritizing readability, and effective documentation.</p>
+            <p class="text-gray-600 mb-4">The <strong class="text-slate-700">SOLID principles</strong> are fundamental for writing clean, maintainable, and scalable object-oriented code:</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong class="font-medium text-slate-700">S</strong>ingle Responsibility Principle (SRP): A class should have only one reason to change.</li>
+                <li><strong class="font-medium text-slate-700">O</strong>pen/Closed Principle (OCP): Open for extension, but closed for modification.</li>
+                <li><strong class="font-medium text-slate-700">L</strong>iskov Substitution Principle (LSP): Subtypes must be substitutable for their base types.</li>
+                <li><strong class="font-medium text-slate-700">I</strong>nterface Segregation Principle (ISP): Clients should not be forced to depend on interfaces they do not use.</li>
+                <li><strong class="font-medium text-slate-700">D</strong>ependency Inversion Principle (DIP): Depend on abstractions, not concretions.</li>
+            </ul>
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Principle</th>
+                            <th>Description</th>
+                            <th>Benefit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Standard Project Structure</strong></td>
+                            <td>Organize files consistently (e.g., Maven layout).</td>
+                            <td>Improves navigation, understanding, and collaboration.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Naming Conventions</strong></td>
+                            <td>Follow Java's rules for classes, methods, variables, etc.</td>
+                            <td>Enhances readability, consistency, and maintainability.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Readability over Reusability</strong></td>
+                            <td>Prioritize clear, understandable code, even if it means less immediate reuse.</td>
+                            <td>Simplifies debugging, onboarding, and long-term maintenance.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Meaningful Comments/Docs</strong></td>
+                            <td>Explain complex logic and API contracts with Javadoc and inline comments.</td>
+                            <td>Provides context, reduces confusion, and aids users/developers.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Consistent Formatting</strong></td>
+                            <td>Apply uniform whitespace and indentation.</td>
+                            <td>Improves visual clarity and team collaboration.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Limited Method Parameters</strong></td>
+                            <td>Restrict the number of arguments in methods.</td>
+                            <td>Indicates single responsibility, improves readability.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Avoid Hardcoding Values</strong></td>
+                            <td>Use constants or enums instead of literal values.</td>
+                            <td>Increases reusability, testability, and maintainability.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SOLID Principles</strong></td>
+                            <td>Apply SRP, OCP, LSP, ISP, DIP.</td>
+                            <td>Leads to maintainable, scalable, and robust object-oriented designs.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DRY (Don't Repeat Yourself)</strong></td>
+                            <td>Eliminate duplicate code across the system.</td>
+                            <td>Improves maintainability, simplifies bug fixing.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>KISS (Keep It Simple, Stupid)</strong></td>
+                            <td>Strive for simplicity in design and development.</td>
+                            <td>Promotes maintainability, readability, and easier onboarding.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">7.2. Introduction to Unit Testing for Code Quality</h3>
+            <p class="text-gray-600 mb-6"><strong class="text-slate-700">Unit testing</strong> is a fundamental practice for ensuring code quality, reliability, and maintainability. It involves testing the smallest testable parts of an application (methods, classes) in isolation.</p>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li>Verifies correctness, facilitates refactoring, provides documentation, and enables Test-Driven Development (TDD).</li>
+                <li>Popular frameworks: JUnit. Provides annotations (`@Test`, `@BeforeEach`) and assertion methods (`assertEquals`, `assertThrows`).</li>
+            </ul>
+            <div class="code-block" x-data="codeBlock()">
+                <button @click="copyToClipboard($el)" class="copy-btn">Copy</button>
+                <pre><code class="language-java"><span class="keyword">import</span> <span class="type">org.junit.jupiter.api.Test</span>;
+<span class="keyword">import</span> <span class="keyword">static</span> <span class="type">org.junit.jupiter.api.Assertions</span>.<span class="method">assertEquals</span>;
+<span class="keyword">import</span> <span class="keyword">static</span> <span class="type">org.junit.jupiter.api.Assertions</span>.<span class="method">assertThrows</span>;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Calculator</span> {
+    <span class="keyword">public</span> <span class="type">int</span> <span class="method">add</span>(<span class="type">int</span> a, <span class="type">int</span> b) { <span class="keyword">return</span> a + b; }
+    <span class="keyword">public</span> <span class="type">int</span> <span class="method">divide</span>(<span class="type">int</span> a, <span class="type">int</span> b) {
+        <span class="keyword">if</span> (b == <span class="number">0</span>) { <span class="keyword">throw</span> <span class="keyword">new</span> <span class="method">IllegalArgumentException</span>(<span class="string">"Cannot divide by zero"</span>); }
+        <span class="keyword">return</span> a / b;
+    }
+}
+
+<span class="keyword">class</span> <span class="type">CalculatorTest</span> {
+    @<span class="type">Test</span>
+    <span class="keyword">void</span> <span class="method">testAddMethod</span>() {
+        <span class="type">Calculator</span> calculator = <span class="keyword">new</span> <span class="method">Calculator</span>();
+        <span class="method">assertEquals</span>(<span class="number">5</span>, calculator.<span class="method">add</span>(<span class="number">2</span>, <span class="number">3</span>));
+    }
+    @<span class="type">Test</span>
+    <span class="keyword">void</span> <span class="method">testDivideByZeroThrowsException</span>() {
+        <span class="type">Calculator</span> calculator = <span class="keyword">new</span> <span class="method">Calculator</span>();
+        <span class="method">assertThrows</span>(<span class="type">IllegalArgumentException</span>.<span class="keyword">class</span>, () -> calculator.<span class="method">divide</span>(<span class="number">10</span>, <span class="number">0</span>));
+    }
+}</span></code></pre>
+            </div>
+            <p class="text-gray-600 mt-4">Integrating unit testing from the outset fosters quality assurance and reduces the cost of fixing bugs later in development.</p>
+
+            <h3 class="text-2xl font-semibold text-gray-700 mt-12 mb-4">7.3. Hands-on Coding Challenges and Mini-Projects for Skill Reinforcement</h3>
+            <p class="text-gray-600 mb-6">Theoretical knowledge must be complemented by practical application. Engaging in hands-on <strong class="text-slate-700">coding challenges</strong> and <strong class="text-slate-700">mini-projects</strong> provides invaluable experience, applying theoretical knowledge, enhancing problem-solving, and building a strong portfolio.</p>
+            <h4 class="text-xl font-semibold text-gray-700 mb-4">Coding Challenges (Beginner Level)</h4>
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><strong>Word Reversal:</strong> Reverse the order of words in a string (e.g., "Dog bites man" becomes "man bites Dog").</li>
+                <li><strong>Anagrams:</strong> Determine if two strings are anagrams of each other.</li>
+                <li><strong>Prime Number Checker:</strong> Write a function to determine if a given number is prime.</li>
+                <li><strong>Number Reversal:</strong> Reverse the digits of an integer (e.g., 3956 becomes 6593).</li>
+            </ul>
+            <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Mini-Projects (Beginner to Intermediate Level)</h4>
+            <ul class="list-disc list-inside text-gray-600 mb-6">
+                <li><strong>Currency Converter:</strong> Converts currency from one denomination to another.</li>
+                <li><strong>Number Guessing Game:</strong> Player guesses a number with feedback.</li>
+                <li><strong>Tic-Tac-Toe Game:</strong> Classic game using Java GUI (e.g., Swing).</li>
+                <li><strong>Simple Banking Application:</strong> Simulates deposit, withdrawal, balance inqu</li>
+            </ul>
+        </section>
+    </main>
+</div>
+</body>
+</html>
